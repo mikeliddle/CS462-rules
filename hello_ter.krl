@@ -24,11 +24,11 @@ A first ruleset for the Quickstart
   rule monkey {
     select when echo monkey
     pre {
-      name = event:attr("name").defaultsTo("monkey")
+      name = event:attr("name") => event:attr("name") | "monkey"
     }
     
     if name then
-      send_directive("hello" + name)
+      send_directive("hello " + name)
     }
   }
   
