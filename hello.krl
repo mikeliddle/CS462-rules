@@ -5,6 +5,7 @@ ruleset hello_world {
 A first ruleset for the Quickstart
 >>
     author "Phil Windley"
+    editor "Mike Liddle"
     logging on
     shares hello
   }
