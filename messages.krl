@@ -14,4 +14,11 @@ ruleset io.picolabs.use_twilio_v2 {
                         event:attr("message")
                        )
     }
+
+    rule test_get_sms {
+        select when test get_message
+        twilio:messages(event:attr("to"),
+                        event:attr("from)
+                       )
+    }
 }
