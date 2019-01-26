@@ -16,18 +16,14 @@ ruleset io.picolabs.twilio_v2 {
                 "Body":message
             })
     }
-    messages = defaction(to = null, from = null) {
-      base_url = <<https://#{account_sid}:#{auth_token}@api.twilio.com/2010-04-01/Accounts/#{account_sid}/>>
-      
-      query = to && from => {"To": to, "From": from} | to => {"To": to} | from => {"From": from} | null 
-      
+    
+    messages = function(to = null, from = null, pageSize = 50) {
+      base_url = <<https://#{account_sid}:#{auth_token}@api.twilio.com/2010-04-01/Accounts/#{account_sid}/>>;
+      query = to && from => {"To": to, "From": from} | to => {"To": to} | from => {"From": from} | null;
+      query["PageSize"] = pageSize;
       http:get(base_url + "Messages.json",
                  qs = query,
-                      parseJSON = true) setting(returnValue)
-      returns
-      {
-        "result": returnValue
-      } 
+                      parseJSON = true);
     }
   }
 }

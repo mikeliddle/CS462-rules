@@ -16,11 +16,10 @@ ruleset io.picolabs.use_twilio_v2 {
 
     rule test_get_sms {
         select when test get_messages
-        every{
+        send_directive("results", 
           twilio:messages(event:attr("to"),
-                          event:attr("from")
-                         ) setting (result)
-          send_directive("result", result)
-        }
+                          event:attr("from"),
+                          event:attr("pageSize")
+                         ))
     }
 }
