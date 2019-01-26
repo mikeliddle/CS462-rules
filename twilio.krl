@@ -3,7 +3,8 @@ ruleset io.picolabs.twilio_v2 {
     configure using account_sid = ""
                     auth_token = ""
     provides
-        send_sms
+        send_sms,
+        messages
   }
  
   global {
@@ -16,11 +17,17 @@ ruleset io.picolabs.twilio_v2 {
             })
     }
     messages = defaction(to = null, from = null) {
-        base_url = <<https://#{account_sid}:#{auth_token}@api.twilio.com/2010-04-01/Accounts/#{account_sid}/>>
-        to => 
-        http:get(base_url + "Messages.json?"
-            + (to => "To=" + to + "&" | "")
-            + (from => "From=%2B" + from | ""))
+      base_url = <<https://#{account_sid}:#{auth_token}@api.twilio.com/2010-04-01/Accounts/#{account_sid}/>>
+      
+      query = to && from => {"To": to, "From": from} | to => {"To": to} | from => {"From": from} | null 
+      
+      http:get(base_url + "Messages.json",
+                 qs = query,
+                      parseJSON = true) setting(returnValue)
+      returns
+      {
+        "result": returnValue
+      } 
     }
   }
 }

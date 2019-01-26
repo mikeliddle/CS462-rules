@@ -1,4 +1,3 @@
-
 ruleset io.picolabs.use_twilio_v2 {
     meta {
         use module io.picolabs.keys
@@ -16,9 +15,12 @@ ruleset io.picolabs.use_twilio_v2 {
     }
 
     rule test_get_sms {
-        select when test get_message
-        twilio:messages(event:attr("to"),
-                        event:attr("from)
-                       )
+        select when test get_messages
+        every{
+          twilio:messages(event:attr("to"),
+                          event:attr("from")
+                         ) setting (result)
+          send_directive("result", result)
+        }
     }
 }
