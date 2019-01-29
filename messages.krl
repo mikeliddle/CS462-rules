@@ -17,9 +17,9 @@ ruleset io.picolabs.use_twilio_v2 {
     rule test_get_sms {
         select when test get_messages
         send_directive("results", 
-          twilio:messages(event:attr("to"),
-                          event:attr("from"),
-                          event:attr("pageSize")
+          twilio:messages(event:attr("to").defaultsTo(null),
+                          event:attr("from").defaultsTo(null),
+                          event:attr("pageSize").defaultsTo(50)
                          ))
     }
 }
