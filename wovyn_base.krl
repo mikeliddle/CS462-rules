@@ -4,6 +4,13 @@ ruleset wovyn_base {
 
     rule process_heartbeat {
         select when wovyn heartbeat
-        send_directive("Heartbeat!")
+
+        pre {
+            has_value = event:attr("genericThing").defaultsTo(false)
+        }
+
+        if has_value then             
+            send_directive("Heartbeat!")
+        
     }
 }
