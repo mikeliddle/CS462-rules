@@ -7,7 +7,7 @@ ruleset wovyn_base {
     }
 
     global {
-        temperature_threshold = 72
+        temperature_threshold = 50
         twilio_number = "4358506161"
         my_number = "8018336518"
     }
@@ -17,16 +17,14 @@ ruleset wovyn_base {
 
         pre {
             value = event:attr("genericThing").defaultsTo(false)
-
-
         }
 
-        if has_value then
+        if value then
             send_directive("Heartbeat!")
 
         fired {
           raise wovyn event "new_temperature_reading"
-            attributes {"temperature": eventattrs["genericThing"]["data"]["temperature"][0]["temperatureF"], "timestamp": time:now()}
+            attributes {"temperature": value["data"]["temperature"][0]["temperatureF"], "timestamp": time:now()}
         }
     }
 
@@ -35,29 +33,27 @@ ruleset wovyn_base {
 
         pre {
             temp = event:attr("temperature")
+            is_normal = temp <= temperature_threshold => "Normal Temperature" | false
         }
+            
+        if is_normal then 
+          send_directive(is_normal)
 
-        if temp > temperature_threshold then
-            send_directive("high temperature")
-
-        fired {
-            raise wovyn event "threshold_violation"
-                attributes(eventattrs)
-        }
-        else {
-            send_directive("normal temperature")
+        notfired {
+          raise wovyn event "threshold_violation"
+            attributes(eventattrs)
         }
     }
 
     rule threshold_notifications {
         select when wovyn threshold_violation
 
-        twilio:send_sms(my_number,
-                        twilio_number,
-                        "High Temperature"
-                       )
-        fired {
-            send_directive("sent sms")
+        every {
+          twilio:send_sms(my_number,
+                          twilio_number,
+                          "High Temperature"
+                         );
+          send_directive("High Temperature");
         }
     }
 }
