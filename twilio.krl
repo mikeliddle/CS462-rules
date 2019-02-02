@@ -24,8 +24,8 @@ ruleset io.picolabs.twilio_v2 {
       query["From"] = from => from | null;
       query["PageSize"] = pageSize;
       http:get(base_url + "Messages.json",
-                 qs = query,
-                      parseJSON = true);
+               qs = query,
+               parseJSON = true);
     }
   }
 }

@@ -3,7 +3,7 @@ ruleset io.picolabs.use_twilio_v2 {
         use module io.picolabs.keys
         use module io.picolabs.twilio_v2 alias twilio
             with account_sid = keys:twilio{"account_sid"}
-                auth_token =  keys:twilio{"auth_token"}
+                  auth_token = keys:twilio{"auth_token"}
     }
 
     rule test_send_sms {
