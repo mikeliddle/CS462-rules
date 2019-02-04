@@ -33,15 +33,14 @@ ruleset wovyn_base {
 
         pre {
             temp = event:attr("temperature")
-            is_normal = temp <= temperature_threshold => "Normal Temperature" | false
+            is_normal = temp <= temperature_threshold => "Normal Temperature" | "High Temperature"
         }
             
-        if is_normal then 
-          send_directive(is_normal)
+        send_directive(is_normal)
 
-        notfired {
+        always {
           raise wovyn event "threshold_violation"
-            attributes(eventattrs)
+            attributes(eventattrs) if (temp > temperature_threshold);
         }
     }
 
@@ -53,7 +52,7 @@ ruleset wovyn_base {
                           twilio_number,
                           "High Temperature"
                          );
-          send_directive("High Temperature");
+          send_directive("sent sms");
         }
     }
 }
