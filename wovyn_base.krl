@@ -33,10 +33,10 @@ ruleset wovyn_base {
 
         pre {
             temp = event:attr("temperature")
-            is_normal = temp <= temperature_threshold => "Normal Temperature" | "High Temperature"
+            message = temp <= temperature_threshold => "Normal Temperature" | "High Temperature"
         }
             
-        send_directive(is_normal)
+        send_directive(message)
 
         always {
           raise wovyn event "threshold_violation"
