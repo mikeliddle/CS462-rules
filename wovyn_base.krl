@@ -40,7 +40,7 @@ ruleset wovyn_base {
 
         always {
           raise wovyn event "threshold_violation"
-            attributes(eventattrs) if (temp > temperature_threshold);
+            attributes event:attrs if (temp > temperature_threshold);
         }
     }
 
