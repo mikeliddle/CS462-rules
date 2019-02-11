@@ -7,7 +7,7 @@ ruleset wovyn_base {
     }
 
     global {
-        temperature_threshold = 50
+        temperature_threshold = 60
         twilio_number = "4358506161"
         my_number = "8018336518"
     }
