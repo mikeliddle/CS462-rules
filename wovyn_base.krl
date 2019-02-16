@@ -1,5 +1,6 @@
 ruleset wovyn_base {
     meta {
+        use module sensor_profile
         use module io.picolabs.keys
         use module io.picolabs.twilio_v2 alias twilio
             with account_sid = keys:twilio{"account_sid"}
@@ -7,9 +8,7 @@ ruleset wovyn_base {
     }
 
     global {
-        temperature_threshold = 60
         twilio_number = "4358506161"
-        my_number = "8018336518"
     }
 
     rule process_heartbeat {
@@ -33,14 +32,14 @@ ruleset wovyn_base {
 
         pre {
             temp = event:attr("temperature")
-            message = temp <= temperature_threshold => "Normal Temperature" | "High Temperature"
+            message = temp <= sensor_profile:getTemperatureThreshold() => "Normal Temperature" | "High Temperature"
         }
             
         send_directive(message)
 
         always {
           raise wovyn event "threshold_violation"
-            attributes event:attrs if (temp > temperature_threshold);
+            attributes event:attrs if (temp > sensor_profile:getTemperatureThreshold());
         }
     }
 
@@ -48,7 +47,7 @@ ruleset wovyn_base {
         select when wovyn threshold_violation
 
         every {
-          twilio:send_sms(my_number,
+          twilio:send_sms(sensor_profile:getPhoneNumber(),
                           twilio_number,
                           "High Temperature"
                          );

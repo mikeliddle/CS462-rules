@@ -1,12 +1,11 @@
 ruleset temperature_store {
     meta {
+        use module sensor_profile
         provides temperatures, threshold_violations, inrange_temperatures
         shares temperatures, threshold_violations, inrange_temperatures
     }
 
     global {
-        temperature_threshold = 60;
-
         temperatures = function() {
             ent:temperatures.defaultsTo([]);
         }
@@ -18,7 +17,7 @@ ruleset temperature_store {
         inrange_temperatures = function() {
             ent:temperatures.defaultsTo([]).filter(
                     function(x){
-                        x["temperature"] < temperature_threshold
+                        x["temperature"] < sensor_profile:getTemperatureThreshold()
                     });
         }
     }
