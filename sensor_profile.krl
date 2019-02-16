@@ -1,15 +1,10 @@
-ruleset temperature_store {
+ruleset sensor_profile {
     meta {
         provides getTemperatureThreshold, getName, getLocation, getPhoneNumber
         shares getTemperatureThreshold, getName, getLocation, getPhoneNumber
     }
 
     global {
-        temperature_threshold = 60;
-        username = "Mike"
-        location = "home"
-        phoneNumber = "8018336518"
-
         getTemperatureThreshold = function() {
             ent:temperature_threshold.defaultsTo(60)
         }
