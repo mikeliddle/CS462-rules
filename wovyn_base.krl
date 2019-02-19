@@ -51,7 +51,7 @@ ruleset wovyn_base {
                           twilio_number,
                           "High Temperature"
                          );
-          send_directive("sent sms");
+          send_directive("sent sms to " + sensor_profile:getPhoneNumber());
         }
     }
 }
