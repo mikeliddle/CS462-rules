@@ -11,7 +11,11 @@ ruleset temperature_store {
         }
 
         threshold_violations = function() {
-            ent:threshold_violations.defaultsTo([]);
+            ent:temperatures.defaultsTo([]).filter(
+                function(x) {
+                    x["temperature"] > sensor_profile:getTemperatureThreshold()
+                }
+            );
         }
 
         inrange_temperatures = function() {

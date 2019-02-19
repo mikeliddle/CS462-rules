@@ -19,6 +19,7 @@ angular.module('Wovyn', [])
       pURL = pURL + "&tempThreshold=" + $scope.temperatureThreshold + "&location=" + $scope.location;
       return $http.post(pURL).success(function(data){
         $scope.getAll();
+        $scope.getViolations();
         $scope.getProfile();
       });
     };
@@ -33,6 +34,7 @@ angular.module('Wovyn', [])
         });
         $scope.currentTemperature = temps[0];
         angular.copy(temps, $scope.temperatures)
+        $scope.temperatures.length = Math.min($scope.temperatures.length, 10); 
       });
     };
 
@@ -45,6 +47,7 @@ angular.module('Wovyn', [])
           return Date.parse(b['timestamp']) - Date.parse(a['timestamp'])
         });
         angular.copy(temps, $scope.thresholdViolations)
+        $scope.thresholdViolations.length = Math.min($scope.thresholdViolations.length, 10); 
       });
     };
 
