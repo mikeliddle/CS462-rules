@@ -4,9 +4,9 @@ angular.module('Wovyn', [])
   function($scope,$http){
     $scope.profileVisible = false
     $scope.currentTemperature = 0;
-    $scope.name = "";
-    $scope.phone = "";
-    $scope.location = "";
+    $scope.name = "John Doe";
+    $scope.phone = "8888888888";
+    $scope.location = "Home";
     $scope.temperatureThreshold = 30;
     $scope.temperatures = [];
     $scope.thresholdViolations = [];

@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 <head>
-  <title>Timing</title>
+  <title>Temperature</title>
   <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular.min.js"></script>
   <script src="temperature.js"></script>
@@ -13,24 +13,24 @@
 <div class="row">
 <div class="col-md-8 col-md-offset-2">
 <div class="page-header"> 
-  <h1>Current Temperature: {{currentTemperature.temperature}}</h1>
+  <h1>Current Temperature at {{location}}: {{currentTemperature.temperature}}</h1>
 </div>
 <div class="profile" ng-show="$scope.profileVisible">
   <form ng-submit="updateProfile()" style = "margin-top:30px;">
-    <input type="text" ng-model="name" placeholder="number"></input>
-    <input type="text" ng-model="phone" placeholder="number"></input>
-    <input type="text" ng-model="location" placeholder="number"></input>
-    <input type="text" ng-model="temperatureThreshold" placeholder="name"></input>
+    <label for="name">Name: </label> <input type="text" ng-model="name" placeholder="name"></input><br />
+    <label for="phone">Phone: </label> <input type="text" ng-model="phone" placeholder="phone number"></input><br />
+    <label for="location">Location: </label> <input type="text" ng-model="location" placeholder="location"></input><br />
+    <label for="temperatureThreshold">Threshold: </label> <input type="text" ng-model="temperatureThreshold" placeholder="threshold"></input><br />
     <button type="submit">Update Profile</button>
   </form>
 </div>
 <button type="submit" ng-click="$scope.profileVisible = true" ng-hide="$scope.profileVisible">View Profile</button>
-  <h2>Temperature History:</h2>
+  <h2>Temperature History (limit 10):</h2>
   <div ng-repeat="temperature in temperatures">
     {{temperature.temperature}} &middot;
     {{temperature.timestamp}}
   </div>
-  <h2>Temperature Violations:</h2>
+  <h2>Temperature Violations(> {{temperatureThreshold}}):</h2>
   <div ng-repeat="temperature in thresholdViolations">
     {{temperature.temperature}} &middot;
     {{temperature.timestamp}}
