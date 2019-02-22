@@ -25,7 +25,7 @@ ruleset manage_sensors {
             send_directive("sensor exists", {"sensor_id": sensor_id})
 
         notfired {
-            ent:sensors := ent:sensors.defaultsTo([]).union([sensor_id])
+            ent:sensors := ent:sensors.defaultsTo([]).union([sensor_id]);
             raise wrangler event "child creation"
                 attributes { "name": nameFromId(sensor_id), 
                              "color": "#ffff00",
@@ -37,7 +37,7 @@ ruleset manage_sensors {
         select when wrangler new_child_created
 
         pre {
-            message = event:attrs()
+            message = event:attrs
         }
         
         send_directive(message)
