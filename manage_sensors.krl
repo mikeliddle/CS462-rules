@@ -26,7 +26,9 @@ ruleset manage_sensors {
         }
 
         getTemperatures = function() {
-
+            ent:sensors.map(function(x) {
+                wrangler:skyQuery(x,"temperature_store","temperatures", []).klog();
+            });
         }
     }
 
@@ -68,7 +70,6 @@ ruleset manage_sensors {
         
         every{
             send_directive("updating", options);
-            // send_event(eci, "sensor", "profile_updated", profile);
             event:send(
                 {
                     "eci": eci, "eid": "eid",
