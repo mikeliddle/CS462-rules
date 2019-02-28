@@ -121,7 +121,11 @@ test_harness = test_sensors()
 print("Creating Picos")
 create_sensors(test_harness)
 
-print("Check Pico-engine online.")
+print("Testing Duplicate Pico Creation")
+create_sensors(test_harness)
+
+print("Check Pico-engine online.  There should be 8 picos with names 0...7")
+
 time.sleep(5)
 
 picos = test_harness.get_sensors()
