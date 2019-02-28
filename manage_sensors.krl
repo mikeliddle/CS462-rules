@@ -27,12 +27,13 @@ ruleset manage_sensors {
 
         getTemperatures = function() {
             ent:sensors.map(function(x) {
+                x.klog();
                 wrangler:skyQuery(x,"temperature_store","temperatures", []).klog();
             });
         }
     }
 
-    rule create_sensor {
+    rule new_sensor {
         select when sensor new_sensor
 
         pre {
@@ -40,7 +41,7 @@ ruleset manage_sensors {
             name = event:attr("name")
             phone = event:attr("phone")
             location = event:attr("location")
-            exists = ent:sensors >< sensor_id
+            exists = ent:profiles >< sensor_id
         }
         
         if exists then
@@ -58,7 +59,7 @@ ruleset manage_sensors {
         }
     }
 
-    rule update_rules {
+    rule update_child_profile {
         select when wrangler new_child_created
 
         pre {
@@ -94,8 +95,8 @@ ruleset manage_sensors {
         send_directive("Removing Sensor");
 
         always {
-            ent:sensors.delete(sensor_id);
-            ent:picos.delete(sensor_id);
+            ent:sensors := ent:sensors.delete(sensor_id);
+            ent:picos := ent:picos.delete(sensor_id);
 
             raise wrangler event "child_deletion"
                 attributes {"name": sensor_id};

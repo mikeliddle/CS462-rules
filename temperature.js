@@ -11,10 +11,10 @@ angular.module('Wovyn', [])
     $scope.temperatures = [];
     $scope.thresholdViolations = [];
 
-    $scope.eci = "CKFzDy4ip6qqHEUbX7hr7f";
-
-    var bURL = 'http://localhost:8080/sky/event/'+$scope.eci+'/eid/sensor/profile_updated';
+    $scope.eci = "";
+    
     $scope.updateProfile = function() {
+      var bURL = 'http://localhost:8080/sky/event/'+$scope.eci+'/eid/sensor/profile_updated';
       var pURL = bURL + "?phoneNumber=" + $scope.phone + "&username=" + $scope.name;
       pURL = pURL + "&tempThreshold=" + $scope.temperatureThreshold + "&location=" + $scope.location;
       return $http.post(pURL).success(function(data){
@@ -24,8 +24,9 @@ angular.module('Wovyn', [])
       });
     };
 
-    var gURL = 'http://localhost:8080/sky/cloud/'+$scope.eci+'/temperature_store/temperatures';
+    
     $scope.getAll = function() {
+      var gURL = 'http://localhost:8080/sky/cloud/'+$scope.eci+'/temperature_store/temperatures';
       return $http.get(gURL).success(function(data){
         temps = data.sort(function(a, b) {
           console.log(a);
@@ -38,8 +39,9 @@ angular.module('Wovyn', [])
       });
     };
 
-    var vURL = 'http://localhost:8080/sky/cloud/'+$scope.eci+'/temperature_store/threshold_violations';
+    
     $scope.getViolations = function() {
+      var vURL = 'http://localhost:8080/sky/cloud/'+$scope.eci+'/temperature_store/threshold_violations';
       return $http.get(vURL).success(function(data){
         temps = data.sort(function(a, b) {
           console.log(a);
@@ -51,8 +53,9 @@ angular.module('Wovyn', [])
       });
     };
 
-    var profileURL = 'http://localhost:8080/sky/cloud/'+$scope.eci+'/sensor_profile/getProfile';
+    
     $scope.getProfile = function() {
+      var profileURL = 'http://localhost:8080/sky/cloud/'+$scope.eci+'/sensor_profile/getProfile';
       return $http.get(profileURL).success(function(data){
         $scope.name = data['name']
         $scope.phone = data['phone']
@@ -61,8 +64,10 @@ angular.module('Wovyn', [])
       });
     };
 
-    $scope.getProfile();
-    $scope.getAll();
-    $scope.getViolations();
+    $scope.runAll = function() {
+      $scope.getProfile();
+      $scope.getAll();
+      $scope.getViolations();
+    };
   }
 ]);
