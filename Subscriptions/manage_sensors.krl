@@ -2,6 +2,7 @@ ruleset manage_sensors {
   meta{  
     use module io.picolabs.wrangler alias wrangler
     use module temperature_store alias temps
+    use module io.picolabs.subscription alias Subscriptions
     provides profiles, sensors, getTemperatures
     shares profiles, sensors, getTemperatures
   }
@@ -14,7 +15,8 @@ ruleset manage_sensors {
             "temperature_store",
             "io.picolabs.keys",
             "io.picolabs.twilio_v2",
-            "io.picolabs.use_twilio_v2"
+            "io.picolabs.use_twilio_v2",
+            "auto_accept"
         ]
         
         profiles = function() {
@@ -60,7 +62,7 @@ ruleset manage_sensors {
     }
 
     rule update_child_profile {
-        select when wrangler new_child_created
+        select when wrangler child_initialized
 
         pre {
             options = event:attrs
@@ -77,12 +79,54 @@ ruleset manage_sensors {
                     "domain": "sensor", "type": "profile_updated",
                     "attrs": profile
                 }
-            )
+            );
         }
         
         always {
-          ent:sensors := ent:sensors.defaultsTo({}).put(sensor_id, eci);
+          raise sensor event "subscribe"
+            attributes {
+                "eci": "",
+                "sensor_name": ""
+            }
         }
+    }
+    
+    rule sensor_ent_add {
+      select when wrangler subscription_added
+      pre{
+        name = event:attr("name");
+        eci = event:attr("WellKnown_Tx")
+      }
+
+      send_directive("received subscription", event:attrs)
+
+      always {
+          ent:sensors := ent:sensors.defaultsTo({}).put(eci, name);
+      }
+    }
+
+    rule sensor_subscribe {
+        select when sensor subscribe
+
+        pre {
+            eci = meta:eci;
+            sensor_eci = event:attr("eci");
+            sensor_name = event:attr("sensor_name")
+        }
+
+        event:send({
+            "eci": eci,
+            "eid": "subscription",
+            "domain": "wrangler",
+            "type": "subscription",
+            "attrs": {
+                "name": sensor_name,
+                "Rx_role": "owner",
+                "Tx_role": "sensor",
+                "channel_type": "subscription",
+                "wellKnown_Tx": sensor_eci
+            }
+        })
     }
     
     rule delete_sensor {
