@@ -48,12 +48,7 @@ ruleset wovyn_base {
     rule threshold_notifications {
         select when wovyn threshold_violation
 
-        every {
-          twilio:send_sms(sensor_profile:getPhoneNumber(),
-                          twilio_number,
-                          "High Temperature"
-                         );
-          send_directive("sent sms to " + sensor_profile:getPhoneNumber());
-        }
+        foreach subscriptions:established("Tx_role", "owner") setting(x)
+          http:post(x{"Tx_host"} + "/sky/event/" + x{"Tx"} + "/threshold/sensor/threshold_violation")
     }
 }

@@ -28,7 +28,6 @@ ruleset profile_manager {
     }
 
     every{
-        send_directive
         twilio:send_sms(phone_number(), twilio_number, message);
     }
   }
