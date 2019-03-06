@@ -47,8 +47,8 @@ ruleset wovyn_base {
 
     rule threshold_notifications {
         select when wovyn threshold_violation
-
-        foreach subscriptions:established("Tx_role", "owner") setting(x)
-          http:post(x{"Tx_host"} + "/sky/event/" + x{"Tx"} + "/threshold/sensor/threshold_violation")
+        
+        foreach subscriptions:established("Tx_role", "owner").klog() setting(x)
+          http:post("http://localhost:8080" + "/sky/event/" + x{"Tx"} + "/threshold/sensor/threshold_violation")
     }
 }

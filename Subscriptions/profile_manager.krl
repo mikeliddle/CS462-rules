@@ -13,10 +13,6 @@ ruleset profile_manager {
     phone_number = function() {
         ent:sms_number.defaultsTo("8018336518")
     }
-
-    set_phone_number = function(number) {
-        ent:sms_number = number
-    }
   }
 
   rule threshold_notifications {
@@ -24,7 +20,6 @@ ruleset profile_manager {
 
     pre {
         message = event:attr("message").defaultsTo("High Temperature");
-
     }
 
     every{
