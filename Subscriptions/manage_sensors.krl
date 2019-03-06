@@ -29,7 +29,7 @@ ruleset manage_sensors {
 
         getTemperatures = function() {
           subscriptions:established("Tx_role", "sensor").map(function(x) {
-                {}.put(ent:sensors{x{"Tx"}}, wrangler:skyQuery(x{"Tx"},"temperature_store","temperatures", {}));
+                {}.put(ent:sensors{x{"Id"}}, wrangler:skyQuery(x{"Tx"},"temperature_store","temperatures", {}, x{"Tx_host"}));
             });
         }
     }
@@ -94,7 +94,7 @@ ruleset manage_sensors {
       select when wrangler subscription_added
       pre{
         name = event:attr("name");
-        eci = event:attr("Tx");
+        eci = event:attr("Id");
         rx = event:attr("Rx")
       }
 
@@ -112,7 +112,7 @@ ruleset manage_sensors {
         pre {
             eci = meta:eci;
             sensor_eci = event:attr("eci");
-            sensor_name = event:attr("sensor_name")
+            sensor_name = event:attr("sensor_name");
             host = event:attr("host")
         }
 

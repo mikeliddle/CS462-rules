@@ -1,6 +1,8 @@
 ruleset wovyn_base {
     meta {
+        use module io.picolabs.wrangler alias wrangler
         use module sensor_profile
+        use module io.picolabs.subscription alias subscriptions
         use module io.picolabs.keys
         use module io.picolabs.twilio_v2 alias twilio
             with account_sid = keys:twilio{"account_sid"}
