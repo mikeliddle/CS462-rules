@@ -121,8 +121,8 @@ test_harness = test_sensors()
 print("Creating Picos")
 create_sensors(test_harness)
 
-print("Testing Duplicate Pico Creation")
-create_sensors(test_harness)
+# print("Testing Duplicate Pico Creation")
+# create_sensors(test_harness)
 
 print("Check Pico-engine online.  There should be 8 picos with names 0...7")
 
@@ -130,22 +130,22 @@ time.sleep(5)
 
 picos = test_harness.get_sensors()
 
-print("Deleting single Pico.")
-test_harness.delete_sensor("0")
-sensors = test_harness.sensors
-updated = test_harness.get_sensors()
-print("TEST PICO REMOVED: {}".format(str(len(sensors) != len(updated))))
+# print("Deleting single Pico.")
+# test_harness.delete_sensor("0")
+# sensors = test_harness.sensors
+# updated = test_harness.get_sensors()
+# print("TEST PICO REMOVED: {}".format(str(len(sensors) != len(updated))))
 
-data = test_harness.add_temperature(picos["0"], 50)
-print("TEST PICO DOESN'T EXIST: {}".format(str(data == {
-    'error': 'ECI not found: {}'.format(picos["0"])
-})))
+# data = test_harness.add_temperature(picos["0"], 50)
+# print("TEST PICO DOESN'T EXIST: {}".format(str(data == {
+#     'error': 'ECI not found: {}'.format(picos["0"])
+# })))
 
-print("Recreating pico")
-test_harness.create_sensor("0")
+# print("Recreating pico")
+# test_harness.create_sensor("0")
 
-print("Testing profiles")
-test_profiles(test_harness)
+# print("Testing profiles")
+# test_profiles(test_harness)
 
 print("Adding temperatures")
 add_temperatures(test_harness)

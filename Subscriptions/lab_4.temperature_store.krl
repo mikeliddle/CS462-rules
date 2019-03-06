@@ -1,4 +1,4 @@
-ruleset temperature_store {
+ruleset lab_4.temperature_store {
     meta {
         use module sensor_profile
         provides temperatures, threshold_violations, inrange_temperatures

@@ -2,7 +2,7 @@ ruleset manage_sensors {
   meta{  
     use module io.picolabs.wrangler alias wrangler
     use module temperature_store alias temps
-    use module io.picolabs.subscription alias Subscriptions
+    use module io.picolabs.subscription alias subscriptions
     provides profiles, sensors, getTemperatures
     shares profiles, sensors, getTemperatures
   }
@@ -28,9 +28,8 @@ ruleset manage_sensors {
         }
 
         getTemperatures = function() {
-            ent:sensors.map(function(x) {
-                x.klog();
-                wrangler:skyQuery(x,"temperature_store","temperatures", []).klog();
+          subscriptions:established("Tx_role", "sensor").map(function(x) {
+                {}.put(ent:sensors{x{"Tx"}}, wrangler:skyQuery(x{"Tx"},"temperature_store","temperatures", {}));
             });
         }
     }
@@ -85,8 +84,8 @@ ruleset manage_sensors {
         always {
           raise sensor event "subscribe"
             attributes {
-                "eci": "",
-                "sensor_name": ""
+                "eci": eci,
+                "sensor_name": sensor_id
             }
         }
     }
@@ -95,13 +94,15 @@ ruleset manage_sensors {
       select when wrangler subscription_added
       pre{
         name = event:attr("name");
-        eci = event:attr("WellKnown_Tx")
+        eci = event:attr("Tx");
+        rx = event:attr("Rx")
       }
 
       send_directive("received subscription", event:attrs)
 
       always {
-          ent:sensors := ent:sensors.defaultsTo({}).put(eci, name);
+          ent:sensors := ent:sensors.defaultsTo({}).put(eci,name);
+          ent:picos{name} := ent:picos{name}.put("Rx",rx);
       }
     }
 
@@ -112,6 +113,7 @@ ruleset manage_sensors {
             eci = meta:eci;
             sensor_eci = event:attr("eci");
             sensor_name = event:attr("sensor_name")
+            host = event:attr("host")
         }
 
         event:send({
@@ -123,6 +125,7 @@ ruleset manage_sensors {
                 "name": sensor_name,
                 "Rx_role": "owner",
                 "Tx_role": "sensor",
+                "Tx_host": host,
                 "channel_type": "subscription",
                 "wellKnown_Tx": sensor_eci
             }
@@ -136,10 +139,21 @@ ruleset manage_sensors {
             sensor_id = event:attr("sensor_id")
         }
 
-        send_directive("Removing Sensor");
+        every{
+            send_directive("Removing Sensor");
+            event:send({
+                "eci": meta:eci,
+                "eid": "deleting",
+                "domain": "wrangler",
+                "type": "subscription_cancellation",
+                "attrs": {
+                    "Rx": ent:picos{sensor_id}{"Rx"}
+                }
+            })
+        }
 
         always {
-            ent:sensors := ent:sensors.delete(sensor_id);
+            ent:sensors := ent:sensors.delete(ent:picos{sensor_id}{"Rx"});
             ent:picos := ent:picos.delete(sensor_id);
 
             raise wrangler event "child_deletion"
