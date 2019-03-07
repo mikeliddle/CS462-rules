@@ -94,8 +94,8 @@ ruleset manage_sensors {
     rule sensor_ent_add {
       select when wrangler subscription_added
       pre{
-        name = event:attr("name");
-        eci = event:attr("Id");
+        name = event:attr("name")
+        eci = event:attr("Id")
         rx = event:attr("Rx")
       }
 
@@ -111,18 +111,15 @@ ruleset manage_sensors {
         select when sensor subscribe
 
         pre {
-            eci = meta:eci;
-            sensor_eci = event:attr("eci");
-            sensor_name = event:attr("sensor_name");
+            sensor_eci = event:attr("eci")
+            sensor_name = event:attr("sensor_name")
             host = event:attr("host")
         }
+        
+        send_directive("subscribing sensor")
 
-        event:send({
-            "eci": eci,
-            "eid": "subscription",
-            "domain": "wrangler",
-            "type": "subscription",
-            "attrs": {
+        always {
+            raise wrangler event "subscription" attributes {
                 "name": sensor_name,
                 "Rx_role": "owner",
                 "Tx_role": "sensor",
@@ -130,7 +127,7 @@ ruleset manage_sensors {
                 "channel_type": "subscription",
                 "wellKnown_Tx": sensor_eci
             }
-        })
+        }
     }
     
     rule delete_sensor {
@@ -140,20 +137,13 @@ ruleset manage_sensors {
             sensor_id = event:attr("sensor_id")
         }
 
-        every{
-            send_directive("Removing Sensor");
-            event:send({
-                "eci": meta:eci,
-                "eid": "deleting",
-                "domain": "wrangler",
-                "type": "subscription_cancellation",
-                "attrs": {
-                    "Rx": ent:picos{sensor_id}{"Rx"}
-                }
-            })
-        }
+        send_directive("Removing Sensor")
 
         always {
+            raise wrangler  event "subscription_cancellation" attributes {
+                "Rx": ent:picos{sensor_id}{"Rx"}
+            };
+            
             ent:sensors := ent:sensors.delete(ent:picos{sensor_id}{"Rx"});
             ent:picos := ent:picos.delete(sensor_id);
 

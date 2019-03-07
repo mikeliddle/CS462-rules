@@ -49,6 +49,12 @@ ruleset wovyn_base {
         select when wovyn threshold_violation
         
         foreach subscriptions:established("Tx_role", "owner").klog() setting(x)
-          http:post(x{"Tx_host"} + "/sky/event/" + x{"Tx"} + "/threshold/sensor/threshold_violation")
+          event:send({
+              "eci": x{"Tx"},
+              "eid": "threshold",
+              "domain": "sensor",
+              "type": "threshold_violation",
+              "attrs": {}
+          }, x{"Tx_host"})
     }
 }
