@@ -85,7 +85,8 @@ ruleset manage_sensors {
           raise sensor event "subscribe"
             attributes {
                 "eci": eci,
-                "sensor_name": sensor_id
+                "sensor_name": sensor_id,
+                "host": meta:host
             }
         }
     }
