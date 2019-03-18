@@ -1,4 +1,4 @@
-ruleset lab_4.temperature_store {
+ruleset temperature_store {
     meta {
         use module sensor_profile
         provides temperatures, threshold_violations, inrange_temperatures
@@ -37,7 +37,10 @@ ruleset lab_4.temperature_store {
             send_directive("Collecting Temperature")
 
         fired {
-            ent:temperatures := ent:temperatures.defaultsTo([]).append([event:attrs])
+            ent:temperatures := ent:temperatures.defaultsTo([]).append([{
+              "temperature": event:attr("temperature"),
+              "timestamp": event:attr("timestamp")
+            }])
         }
     }
 
@@ -58,5 +61,26 @@ ruleset lab_4.temperature_store {
             clear ent:temperatures;
             clear ent:threshold_violations;
         }
+    }
+
+    rule prepare_report {
+        select when sensor report_needed
+
+        pre {
+            return_host = event:attr("host")
+            report_id = event:attr("report_id")
+            eci = event:attr("eci")
+        }
+        
+        event:send({
+              "eci": eci,
+              "eid": ent:correlation_id.defaultsTo(0),
+              "domain": "manager",
+              "type": "report_ready",
+              "attrs": {
+                "report_id": report_id,
+                "temperatures": temperatures()
+              }
+          }, return_host)
     }
 }
