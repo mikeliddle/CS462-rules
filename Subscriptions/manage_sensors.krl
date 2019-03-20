@@ -215,7 +215,10 @@ ruleset manage_sensors {
           report_id = event:attr("report_id");
           current_report = ent:reports.defaultsTo({}).get(report_id).defaultsTo({});
           temperatures = event:attr("temperatures");
-          current_report{"temperatures"} = current_report{"temperatures"}.defaultsTo([]).append(temperatures);
+          current_report{"temperatures"} = current_report{"temperatures"}.defaultsTo([]).append([{
+            "sensor_id": event:attr("sensor_id"),
+            "temperatures": temperatures
+            }]);
           current_report{"responding"} = current_report{"responding"}.defaultsTo(0) + 1;
           current_report{"timestamp"} = time:now();
         }

@@ -78,6 +78,7 @@ ruleset temperature_store {
               "domain": "manager",
               "type": "report_ready",
               "attrs": {
+                "sensor_id": meta:picoId,
                 "report_id": report_id,
                 "temperatures": temperatures()
               }
