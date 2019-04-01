@@ -2,15 +2,31 @@ ruleset sensor_gossip {
   meta {
     use module temperature_store
     use module sensor_profile
+    use module io.picolabs.subscription alias subscriptions
   }
 
   global {
     getPeer = function() {
-
+      available_peers = ent:peers.defaultsTo({}).filter(function(peer_value,peer_id) {
+        adjusted_messages = ent:messages.defaultsTo({}).filter(function(origin_group, origin_id) {
+          message_id = ent:peers{[peer_id,"messages",origin_id]};
+          
+          origin_group.keys().all(function(x) {x <= message_id});
+        });
+        
+        length(adjusted_messages) > 0;
+      });
+      
+      peer_count = length(available_peers.keys());
+      rand_index = random:integer(0,peer_count);
+      
+      peer_index = available_peers.keys()[rand_index];
+      
+      available_peers{peer_index};
     }
 
     getMessage = function(peer) {
-
+      
     }
   }
 
@@ -20,16 +36,18 @@ ruleset sensor_gossip {
     pre {
       ids = event:attr("MessageID").split(re#:#)
       origin_id = ids[0]
-      message_id = ids[1]
-      message = event:attrs
+      message_id = math:int(ids[1])
+      message = event:attr("Message")
+
+      origin_group = ent:messages.get(origin_id).defaultsTo({})
+      updated_messages = origin_group.put(message_id, message)
     }
 
-    if origin_id >< ent:messages.defaultsTo({}) 
-        && message_id - 1 != ent:messages.get(origin_id) then
+    if ent:messages{origin_id}.defaultsTo(False) && message_id - 1 != ent:messages{origin_id} then
       send_directive("Not adding Message")
 
     notfired {
-      ent:messages := ent:messages.defaultsTo({}).put(origin_id, message_id)
+      ent:messages{origin_id} := updated_messages
     }
   }
 
@@ -40,14 +58,24 @@ ruleset sensor_gossip {
       current_peer = getPeer()
       peer_entity = ent:peers{current_peer{"id"}}.defaultsTo({})
       message = getMessage(current_peer)
+      peer_subscription = subscriptions:established("Tx_role", "peer").filter(function(x) {
+        x{"Id"} == current_peer{"id"}
+      })[0]
     }
 
     if message then
-      send_directive("sending message to peer!")
+      event:send({
+        "eci": "",
+        "eid": "",
+        "domain": "gossip",
+        "type": "new_message",
+        "attrs": {
+
+        }
+      })
 
     fired {
-      ent:peers{current_peer{"id"}} := peer_entity.set(message{"origin_id"}, message{"message_id"});
-      raise gossip event "new_message" attributes message
+      ent:peers{[current_peer{"id"},"messages"]} := current_peer{"messages"}.set(message{"origin_id"}, message{"message_id"})
     }
   }
   
@@ -55,7 +83,7 @@ ruleset sensor_gossip {
     select when sensor new_peer
 
     pre {
-      peer_id = event:attr("id")
+      peer_id = event:attr("eci")
       peer_name = event:attr("sensor_name")
       host = event:attr("host")
     }
@@ -64,6 +92,7 @@ ruleset sensor_gossip {
 
     always {
       ent:peers := ent:peers.defaultsTo({}).put(peer_id, {
+        "id": peer_id,
         "messages": {}
       });
 
