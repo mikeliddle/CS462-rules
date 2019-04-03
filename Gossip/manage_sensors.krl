@@ -13,6 +13,7 @@ ruleset manage_sensors {
       "wovyn_base",
       "sensor_profile",
       "temperature_store",
+      "sensor_gossip",
       "io.picolabs.keys",
       "io.picolabs.twilio_v2",
       "io.picolabs.use_twilio_v2",
