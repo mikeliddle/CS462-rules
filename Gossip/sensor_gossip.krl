@@ -39,8 +39,14 @@ ruleset sensor_gossip {
       available_peers{peer_index}.klog("peer");
     }
 
+    getAnyPeer = function() {
+      peer_count = length(subscriptions:established("Tx_role", "peer")) - 1;
+      rand_index = random:integer(peer_count).klog("peer_index");
+      subscriptions:established("Tx_role", "peer").klog("peers")[rand_index].klog("peer");
+    }
+
     getMessage = function(peer) {
-      available_groups = ent:messages.defaultsTo({}).filter(function(origin_group, origin_id) {
+      available_groups = ent:messages.defaultsTo({}).klog("messages").filter(function(origin_group, origin_id) {
         current_message_id = peer{["messages", origin_id]}.defaultsTo(false);
         messages = origin_group.keys().klog("message_keys");
         last_message = messages[length(messages) - 1];
@@ -53,7 +59,7 @@ ruleset sensor_gossip {
       group_index = available_groups.keys()[rand_index].klog("group_index");
       
       message_index = peer{["messages", group_index]};
-      message_index = message_index => (math:int(message_index) + 1).as("string") | "1";
+      message_index = message_index => (math:int(message_index) + 1).as("String") | "1";
       
       {
         "MessageId": group_index + ":" + message_index,
@@ -61,13 +67,36 @@ ruleset sensor_gossip {
       }
     }
   }
+  
+  rule message_available {
+    select when wovyn new_temperature_reading
+    
+    pre {
+      origin_id = meta:picoId
+      temp = event:attr("temperature").defaultsTo(false)
+      time = time:now()
+      message_group = ent:messages{origin_id}.defaultsTo({})
+      message_id = math:int(ent:seen{origin_id}.defaultsTo(0)) + 1
+    }
+    
+    if temp then 
+      send_directive("temperature received")
+      
+    fired {
+      ent:messages{origin_id} := message_group.put(message_id, {
+        "temperature": temp,
+        "timestamp": time
+      });
+      ent:seen{origin_id} := message_id;
+    }
+  }
 
   rule new_seen {
-    select when gossip seen
+    select when gossip seen where ent:process.defaultsTo(true)
 
     pre {
       my_eci = meta:eci
-      their_name = subscriptions:established("Rx", my_eci)[0]{"name"}
+      their_name = subscriptions:established("Rx", my_eci)[0].klog("peer"){"Tx"}
       new_seen = event:attrs
     }
 
@@ -79,20 +108,21 @@ ruleset sensor_gossip {
   }
 
   rule new_gossip {
-    select when gossip rumor
+    select when gossip rumor where ent:process.defaultsTo(true)
 
     pre {
-      ids = event:attr("MessageID").split(re#:#)
-      origin_id = ids[0]
-      message_id = math:int(ids[1])
+      ids = event:attr("MessageId")
+      id_array = ids.split(re#:#)
+      origin_id = id_array[0]
+      message_id = math:int(id_array[1])
       message = event:attr("Message")
 
       origin_group = ent:messages.get(origin_id).defaultsTo({})
       updated_messages = origin_group.put(message_id, message)
     }
 
-    if ent:messages{origin_id}.defaultsTo(False) && message_id - 1 != ent:messages{origin_id} then
-      send_directive("Not adding Message")
+    if origin_group != {} && message_id - 1 != math:int(ent:seen{origin_id}) then
+      send_directive("Not adding Message", {"ids": ids})
  
     notfired {
       ent:messages := ent:messages.defaultsTo({}).set(origin_id, updated_messages);
@@ -101,33 +131,28 @@ ruleset sensor_gossip {
   }
 
   rule gossip_heartbeat {
-    select when gossip heartbeat
+    select when gossip heartbeat where ent:process.defaultsTo(true)
 
     pre {
-      seen = random:number(0,1) > .5
-      current_peer = getPeer()
+      seen = random:integer(0,1) == 1
     }
 
     if seen then
       send_directive("seen_message");
 
     fired {
-      raise gossip event "seen_requested" attributes {
-        "peer": current_peer
-      }
+      raise gossip event "seen_requested" attributes event:attrs
     }
     else {
-      raise gossip event "rumor_requested" attributes {
-        "peer": current_peer
-      }
+      raise gossip event "rumor_requested" attributes event:attrs
     }
   }
 
   rule send_rumor {
-    select when gossip rumor_requested
+    select when gossip rumor_requested where ent:process.defaultsTo(true)
 
     pre {
-      current_peer = event:attr("peer")
+      current_peer = getPeer()
       peer_entity = ent:peers{current_peer{"id"}}.defaultsTo({})
       message = getMessage(current_peer)
       peer_subscription = subscriptions:established("Tx_role", "peer").filter(function(x) {
@@ -148,13 +173,10 @@ ruleset sensor_gossip {
   }
 
   rule send_seen {
-    select when gossip seen_requested
+    select when gossip seen_requested where ent:process.defaultsTo(true)
 
     pre {
-      current_peer = event:attr("peer")
-      peer_subscription = subscriptions:established("Tx_role", "peer").filter(function(x) {
-        x{"Tx"}.klog("tx") == current_peer{"id"}.klog("peerId")
-      })[0].klog("subscription")
+      peer_subscription = getAnyPeer()
       my_seen = ent:seen.defaultsTo({})
     }
 
@@ -206,11 +228,11 @@ ruleset sensor_gossip {
       new_id = event:attr("Tx").klog("tx")
     }
 
-    // if peer_id >< ent:peers.keys() then
-      send_directive("updating peer")
+    send_directive("updating peer")
 
     fired {
-      ent:peers := ent:peers.defaultsTo({}).set(peer_id, {
+      ent:peers := ent:peers.delete(peer_id);
+      ent:peers := ent:peers.defaultsTo({}).set(new_id, {
         "id": new_id,
         "messages": {}
       });
@@ -224,6 +246,21 @@ ruleset sensor_gossip {
 
     always {
       schedule gossip event "heartbeat" at time:add(time:now(), {"seconds": ent:n.defaultsTo("10")})
+    }
+  }
+  
+  rule status_changed {
+    select when gossip process
+    
+    pre {
+      status = event:attr("status")
+      new_status = status == "on" => true | status != "off"
+    }
+    
+    send_directive("updated status")
+    
+    fired {
+      ent:process := new_status
     }
   }
 
